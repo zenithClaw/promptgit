@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PromptGit — Version Control for AI Prompts</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #0d1117;
+    --card: #161b22;
+    --border: #30363d;
+    --accent: #58a6ff;
+    --green: #3fb950;
+    --red: #f85149;
+    --yellow: #d29922;
+    --text: #e6edf3;
+    --muted: #8b949e;
+    --mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+  }
+  body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; height: 100vh; display: flex; flex-direction: column; }
+  header { background: var(--card); border-bottom: 1px solid var(--border); padding: 12px 20px; display: flex; align-items: center; gap: 12px; }
+  header h1 { font-size: 16px; font-weight: 600; color: var(--text); }
+  header h1 span { color: var(--accent); }
+  header .tagline { font-size: 12px; color: var(--muted); margin-left: auto; }
+  .main { display: grid; grid-template-columns: 1fr 340px; flex: 1; overflow: hidden; }
+  .editor-panel { display: flex; flex-direction: column; border-right: 1px solid var(--border); }
+  .panel-header { padding: 12px 16px; background: var(--card); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+  .panel-title { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+  .editor-area { flex: 1; display: flex; flex-direction: column; padding: 16px; gap: 12px; overflow: hidden; }
+  textarea {
+    flex: 1;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 13px;
+    line-height: 1.6;
+    padding: 14px;
+    resize: none;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  textarea:focus { border-color: var(--accent); }
+  textarea::placeholder { color: var(--muted); }
+  .commit-row { display: flex; gap: 8px; }
+  .commit-input {
+    flex: 1;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    font-size: 13px;
+    padding: 8px 12px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .commit-input:focus { border-color: var(--accent); }
+  .commit-input::placeholder { color: var(--muted); }
+  .btn { padding: 8px 16px; border-radius: 6px; border: none; cursor: pointer; font-size: 13px; font-weight: 500; transition: all 0.15s; }
+  .btn-primary { background: var(--accent); color: #0d1117; }
+  .btn-primary:hover { background: #79b8ff; }
+  .btn-secondary { background: transparent; border: 1px solid var(--border); color: var(--text); }
+  .btn-secondary:hover { background: var(--border); }
+  .btn-danger { background: transparent; border: 1px solid var(--border); color: var(--red); }
+  .btn-danger:hover { background: rgba(248,81,73,0.1); }
+  .meta-row { display: flex; justify-content: space-between; align-items: center; }
+  .char-count { font-size: 11px; color: var(--muted); font-family: var(--mono); }
+  .history-panel { display: flex; flex-direction: column; overflow: hidden; }
+  .history-list { flex: 1; overflow-y: auto; }
+  .history-list::-webkit-scrollbar { width: 4px; }
+  .history-list::-webkit-scrollbar-track { background: transparent; }
+  .history-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+  .version-item { padding: 12px 16px; border-bottom: 1px solid var(--border); cursor: pointer; transition: background 0.1s; position: relative; }
+  .version-item:hover { background: rgba(88,166,255,0.05); }
+  .version-item.active { background: rgba(88,166,255,0.08); border-left: 2px solid var(--accent); padding-left: 14px; }
+  .version-item.comparing { background: rgba(63,185,80,0.06); border-left: 2px solid var(--green); padding-left: 14px; }
+  .version-hash { font-family: var(--mono); font-size: 11px; color: var(--accent); font-weight: 600; }
+  .version-msg { font-size: 13px; color: var(--text); margin: 4px 0 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .version-time { font-size: 11px; color: var(--muted); }
+  .version-actions { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); display: none; gap: 4px; }
+  .version-item:hover .version-actions { display: flex; }
+  .version-tag { display: inline-block; font-size: 10px; padding: 1px 6px; border-radius: 10px; margin-left: 6px; }
+  .tag-current { background: rgba(88,166,255,0.15); color: var(--accent); }
+  .tag-compare { background: rgba(63,185,80,0.15); color: var(--green); }
+  .diff-panel { border-top: 1px solid var(--border); background: var(--card); }
+  .diff-header { padding: 10px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px; }
+  .diff-content { padding: 12px 16px; font-family: var(--mono); font-size: 12px; line-height: 1.7; max-height: 200px; overflow-y: auto; white-space: pre-wrap; word-break: break-word; }
+  .diff-add { background: rgba(63,185,80,0.15); color: var(--green); display: inline; border-radius: 2px; padding: 0 2px; }
+  .diff-remove { background: rgba(248,81,73,0.15); color: var(--red); display: inline; border-radius: 2px; padding: 0 2px; text-decoration: line-through; }
+  .empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 200px; color: var(--muted); gap: 8px; text-align: center; padding: 20px; }
+  .empty-icon { font-size: 32px; opacity: 0.4; }
+  .empty-text { font-size: 13px; }
+  .badge { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; padding: 2px 8px; border-radius: 10px; }
+  .badge-blue { background: rgba(88,166,255,0.15); color: var(--accent); }
+  .badge-green { background: rgba(63,185,80,0.15); color: var(--green); }
+  .toast { position: fixed; bottom: 20px; right: 20px; background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 12px 16px; font-size: 13px; z-index: 100; transform: translateY(80px); opacity: 0; transition: all 0.3s; box-shadow: 0 4px 12px rgba(0,0,0,0.4); }
+  .toast.show { transform: translateY(0); opacity: 1; }
+  .toast.success { border-left: 3px solid var(--green); }
+  .mode-tabs { display: flex; gap: 0; }
+  .mode-tab { padding: 6px 14px; font-size: 12px; cursor: pointer; border: 1px solid var(--border); color: var(--muted); background: transparent; transition: all 0.15s; }
+  .mode-tab:first-child { border-radius: 6px 0 0 6px; }
+  .mode-tab:last-child { border-radius: 0 6px 6px 0; border-left: none; }
+  .mode-tab.active { background: var(--accent); color: #0d1117; border-color: var(--accent); }
+  .compare-view { display: none; flex: 1; gap: 0; overflow: hidden; }
+  .compare-view.show { display: grid; grid-template-columns: 1fr 1fr; }
+  .compare-side { display: flex; flex-direction: column; border-right: 1px solid var(--border); overflow: hidden; }
+  .compare-side:last-child { border-right: none; }
+  .compare-header { padding: 8px 12px; background: var(--card); border-bottom: 1px solid var(--border); font-size: 11px; color: var(--muted); font-family: var(--mono); }
+  .compare-content { flex: 1; padding: 14px; font-family: var(--mono); font-size: 12px; line-height: 1.7; overflow-y: auto; white-space: pre-wrap; word-break: break-word; color: var(--text); }
+</style>
+</head>
+<body>
+
+<header>
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#58a6ff" stroke-width="2">
+    <circle cx="12" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><circle cx="18" cy="6" r="3"/>
+    <path d="M18 9v1a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V9"/><line x1="12" y1="12" x2="12" y2="15"/>
+  </svg>
+  <h1>Prompt<span>Git</span></h1>
+  <div style="display:flex;gap:8px;align-items:center;margin-left:8px">
+    <span id="versionCount" class="badge badge-blue">0 versions</span>
+    <span id="compareStatus" class="badge badge-green" style="display:none">Compare mode</span>
+  </div>
+  <div class="tagline">Version control for AI prompts — all local, no tracking</div>
+  <div class="mode-tabs" style="margin-left:16px">
+    <button class="mode-tab active" onclick="setMode('edit')">Editor</button>
+    <button class="mode-tab" onclick="setMode('compare')">Compare</button>
+  </div>
+</header>
+
+<div class="main">
+  <!-- Left: Editor -->
+  <div class="editor-panel">
+    <div class="panel-header">
+      <span class="panel-title">✏️ Prompt Editor</span>
+      <span id="activeLabel" class="badge badge-blue" style="font-size:11px">new prompt</span>
+    </div>
+
+    <div id="editView" class="editor-area">
+      <textarea id="promptEditor" placeholder="Write your prompt here...&#10;&#10;Every save creates a new version you can diff, compare, and restore." spellcheck="false"></textarea>
+      <div class="meta-row">
+        <span class="char-count"><span id="charCount">0</span> chars · <span id="wordCount">0</span> words</span>
+        <button class="btn btn-secondary" onclick="clearEditor()" style="font-size:11px;padding:4px 10px">Clear</button>
+      </div>
+      <div class="commit-row">
+        <input class="commit-input" id="commitMsg" placeholder="Commit message (optional — e.g. 'add role context')" />
+        <button class="btn btn-primary" onclick="saveVersion()">Save Version</button>
+      </div>
+    </div>
+
+    <div id="compareView" class="compare-view">
+      <div class="compare-side">
+        <div class="compare-header" id="compareHeaderA">Select version A from history →</div>
+        <div class="compare-content" id="compareContentA" style="color:var(--muted)">No version selected</div>
+      </div>
+      <div class="compare-side">
+        <div class="compare-header" id="compareHeaderB">Select version B from history →</div>
+        <div class="compare-content" id="compareContentB" style="color:var(--muted)">No version selected</div>
+      </div>
+    </div>
+
+    <!-- Diff view at bottom -->
+    <div class="diff-panel" id="diffPanel" style="display:none">
+      <div class="diff-header">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        <span style="font-size:12px;color:var(--muted)" id="diffLabel">Diff</span>
+        <button onclick="closeDiff()" style="margin-left:auto;background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px">×</button>
+      </div>
+      <div class="diff-content" id="diffContent"></div>
+    </div>
+  </div>
+
+  <!-- Right: Version History -->
+  <div class="history-panel">
+    <div class="panel-header">
+      <span class="panel-title">📋 Version History</span>
+      <button class="btn btn-danger" onclick="clearAll()" style="font-size:11px;padding:4px 10px">Clear All</button>
+    </div>
+    <div class="history-list" id="historyList">
+      <div class="empty-state">
+        <div class="empty-icon">🌱</div>
+        <div class="empty-text">No versions yet.<br>Write a prompt and save it.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+let versions = JSON.parse(localStorage.getItem('promptgit_versions') || '[]');
+let currentMode = 'edit';
+let compareA = null;
+let compareB = null;
+let activeVersionIndex = null;
+
+// Init
+renderHistory();
+updateCounts();
+
+document.getElementById('promptEditor').addEventListener('input', updateCounts);
+
+function updateCounts() {
+  const text = document.getElementById('promptEditor').value;
+  document.getElementById('charCount').textContent = text.length;
+  document.getElementById('wordCount').textContent = text.trim() ? text.trim().split(/\s+/).length : 0;
+}
+
+function saveVersion() {
+  const content = document.getElementById('promptEditor').value.trim();
+  if (!content) { showToast('Write something first', ''); return; }
+  const msg = document.getElementById('commitMsg').value.trim() || 'Updated prompt';
+  const hash = Math.random().toString(36).substr(2, 7);
+  const version = {
+    hash,
+    content,
+    message: msg,
+    timestamp: Date.now()
+  };
+  versions.unshift(version);
+  localStorage.setItem('promptgit_versions', JSON.stringify(versions));
+  document.getElementById('commitMsg').value = '';
+  activeVersionIndex = 0;
+  renderHistory();
+  showToast('Version saved: ' + hash, 'success');
+  updateVersionCount();
+}
+
+function renderHistory() {
+  const list = document.getElementById('historyList');
+  if (!versions.length) {
+    list.innerHTML = '<div class="empty-state"><div class="empty-icon">🌱</div><div class="empty-text">No versions yet.<br>Write a prompt and save it.</div></div>';
+    return;
+  }
+  list.innerHTML = versions.map((v, i) => {
+    const isActive = activeVersionIndex === i;
+    const isCompareA = compareA === i;
+    const isCompareB = compareB === i;
+    const cls = isActive ? 'active' : (isCompareA || isCompareB ? 'comparing' : '');
+    const tags = (isActive ? '<span class="version-tag tag-current">current</span>' : '') +
+                 (isCompareA ? '<span class="version-tag tag-compare">A</span>' : '') +
+                 (isCompareB ? '<span class="version-tag tag-compare">B</span>' : '');
+    const timeStr = formatTime(v.timestamp);
+    return `<div class="version-item ${cls}" onclick="selectVersion(${i})">
+      <div><span class="version-hash">${v.hash}</span>${tags}</div>
+      <div class="version-msg">${escapeHtml(v.message)}</div>
+      <div class="version-time">${timeStr} · ${v.content.length} chars</div>
+      <div class="version-actions">
+        <button class="btn btn-secondary" style="font-size:10px;padding:2px 8px" onclick="event.stopPropagation();diffWith(${i})">Diff</button>
+        <button class="btn btn-danger" style="font-size:10px;padding:2px 8px" onclick="event.stopPropagation();deleteVersion(${i})">×</button>
+      </div>
+    </div>`;
+  }).join('');
+  updateVersionCount();
+}
+
+function selectVersion(i) {
+  if (currentMode === 'compare') {
+    if (compareA === null || (compareA !== null && compareB !== null)) {
+      compareA = i; compareB = null;
+    } else if (compareB === null && i !== compareA) {
+      compareB = i;
+      renderCompare();
+    }
+    renderHistory();
+    return;
+  }
+  activeVersionIndex = i;
+  document.getElementById('promptEditor').value = versions[i].content;
+  document.getElementById('activeLabel').textContent = versions[i].hash;
+  updateCounts();
+  renderHistory();
+  // Show diff with previous if exists
+  if (versions[i+1]) diffWith(i);
+}
+
+function diffWith(i) {
+  if (!versions[i+1]) { showToast('No previous version to diff', ''); return; }
+  const curr = versions[i].content;
+  const prev = versions[i+1].content;
+  const diffHtml = computeDiff(prev, curr);
+  document.getElementById('diffContent').innerHTML = diffHtml;
+  document.getElementById('diffLabel').textContent = `${versions[i+1].hash} → ${versions[i].hash}`;
+  document.getElementById('diffPanel').style.display = 'block';
+}
+
+function computeDiff(oldText, newText) {
+  const oldWords = oldText.split(/(\s+)/);
+  const newWords = newText.split(/(\s+)/);
+  // Simple LCS diff
+  const m = oldWords.length, n = newWords.length;
+  const dp = Array.from({length: m+1}, () => new Array(n+1).fill(0));
+  for (let i = 1; i <= m; i++)
+    for (let j = 1; j <= n; j++)
+      dp[i][j] = oldWords[i-1] === newWords[j-1] ? dp[i-1][j-1]+1 : Math.max(dp[i-1][j], dp[i][j-1]);
+  const result = [];
+  let i = m, j = n;
+  while (i > 0 || j > 0) {
+    if (i > 0 && j > 0 && oldWords[i-1] === newWords[j-1]) {
+      result.unshift({type:'same', val: oldWords[i-1]}); i--; j--;
+    } else if (j > 0 && (i === 0 || dp[i][j-1] >= dp[i-1][j])) {
+      result.unshift({type:'add', val: newWords[j-1]}); j--;
+    } else {
+      result.unshift({type:'remove', val: oldWords[i-1]}); i--;
+    }
+  }
+  return result.map(r => {
+    if (r.type === 'same') return escapeHtml(r.val);
+    if (r.type === 'add') return `<span class="diff-add">${escapeHtml(r.val)}</span>`;
+    return `<span class="diff-remove">${escapeHtml(r.val)}</span>`;
+  }).join('');
+}
+
+function renderCompare() {
+  if (compareA === null || compareB === null) return;
+  const vA = versions[compareA], vB = versions[compareB];
+  document.getElementById('compareHeaderA').textContent = `${vA.hash} — ${vA.message}`;
+  document.getElementById('compareHeaderB').textContent = `${vB.hash} — ${vB.message}`;
+  document.getElementById('compareContentA').textContent = vA.content;
+  document.getElementById('compareContentB').textContent = vB.content;
+  document.getElementById('compareContentA').style.color = 'var(--text)';
+  document.getElementById('compareContentB').style.color = 'var(--text)';
+}
+
+function setMode(mode) {
+  currentMode = mode;
+  document.querySelectorAll('.mode-tab').forEach((t,i) => t.classList.toggle('active', i === (mode==='edit'?0:1)));
+  document.getElementById('editView').style.display = mode === 'edit' ? 'flex' : 'none';
+  document.getElementById('compareView').classList.toggle('show', mode === 'compare');
+  document.getElementById('compareStatus').style.display = mode === 'compare' ? 'inline-flex' : 'none';
+  if (mode === 'compare') { compareA = null; compareB = null; renderHistory(); showToast('Select 2 versions to compare', ''); }
+}
+
+function closeDiff() { document.getElementById('diffPanel').style.display = 'none'; }
+
+function clearEditor() {
+  document.getElementById('promptEditor').value = '';
+  document.getElementById('activeLabel').textContent = 'new prompt';
+  activeVersionIndex = null;
+  updateCounts();
+  closeDiff();
+  renderHistory();
+}
+
+function deleteVersion(i) {
+  versions.splice(i, 1);
+  localStorage.setItem('promptgit_versions', JSON.stringify(versions));
+  if (activeVersionIndex === i) { clearEditor(); }
+  else if (activeVersionIndex > i) activeVersionIndex--;
+  renderHistory();
+  showToast('Version deleted', '');
+}
+
+function clearAll() {
+  if (!versions.length) return;
+  if (!confirm('Delete all versions? This cannot be undone.')) return;
+  versions = [];
+  localStorage.removeItem('promptgit_versions');
+  clearEditor();
+  renderHistory();
+  showToast('All versions cleared', '');
+}
+
+function updateVersionCount() {
+  document.getElementById('versionCount').textContent = `${versions.length} version${versions.length !== 1 ? 's' : ''}`;
+}
+
+function formatTime(ts) {
+  const d = new Date(ts), now = new Date();
+  const diff = (now - d) / 1000;
+  if (diff < 60) return 'just now';
+  if (diff < 3600) return Math.floor(diff/60) + 'm ago';
+  if (diff < 86400) return Math.floor(diff/3600) + 'h ago';
+  return d.toLocaleDateString();
+}
+
+function escapeHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function showToast(msg, type) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast' + (type === 'success' ? ' success' : '') + ' show';
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+</script>
+</body>
+</html>
