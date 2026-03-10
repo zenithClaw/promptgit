@@ -272,17 +272,22 @@ function selectVersion(i) {
   document.getElementById('activeLabel').textContent = versions[i].hash;
   updateCounts();
   renderHistory();
-  // Show diff with previous if exists
-  if (versions[i+1]) diffWith(i);
+  // Show diff: compare with next newer version (i-1) or older (i+1), whichever exists
+  if (versions[i-1]) diffBetween(i, i-1);
+  else if (versions[i+1]) diffBetween(i+1, i);
 }
 
 function diffWith(i) {
   if (!versions[i+1]) { showToast('No previous version to diff', ''); return; }
-  const curr = versions[i].content;
-  const prev = versions[i+1].content;
+  diffBetween(i, i+1);
+}
+
+function diffBetween(newerIdx, olderIdx) {
+  const curr = versions[newerIdx].content;
+  const prev = versions[olderIdx].content;
   const diffHtml = computeDiff(prev, curr);
   document.getElementById('diffContent').innerHTML = diffHtml;
-  document.getElementById('diffLabel').textContent = `${versions[i+1].hash} → ${versions[i].hash}`;
+  document.getElementById('diffLabel').textContent = `${versions[olderIdx].hash} → ${versions[newerIdx].hash}`;
   document.getElementById('diffPanel').style.display = 'block';
 }
 
