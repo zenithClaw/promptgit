@@ -3,777 +3,485 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PromptGit — Version Control for AI Prompts</title>
+<title>PromptGit — AI Prompt Evolution & Insight</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-<style>
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-:root {
-  --bg: #080810;
-  --surface: #0e0e1a;
-  --surface2: #13131f;
-  --border: rgba(255,255,255,0.06);
-  --border-hover: rgba(255,255,255,0.1);
-  --text: #eeeef8;
-  --text-2: #8888aa;
-  --text-3: #44445a;
-  --accent: #7c6af7;
-  --accent-dim: rgba(124,106,247,0.12);
-  --accent-glow: rgba(124,106,247,0.2);
-  --green: #4ade80;
-  --green-dim: rgba(74,222,128,0.1);
-  --red: #f87171;
-  --red-dim: rgba(248,113,113,0.1);
-  --mono: 'JetBrains Mono', monospace;
-}
-
-html, body { height: 100%; }
-
-body {
-  font-family: 'Inter', -apple-system, sans-serif;
-  background: var(--bg);
-  color: var(--text);
-  display: flex;
-  flex-direction: column;
-  height: 100vh;
-  overflow: hidden;
-  -webkit-font-smoothing: antialiased;
-}
-
-/* ── Header ── */
-header {
-  border-bottom: 1px solid var(--border);
-  padding: 0 20px;
-  height: 48px;
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  flex-shrink: 0;
-  background: rgba(8,8,16,0.9);
-  backdrop-filter: blur(12px);
-}
-
-.logo {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 14px;
-  font-weight: 600;
-  letter-spacing: -0.02em;
-}
-
-.logo-dot {
-  width: 7px; height: 7px;
-  background: var(--accent);
-  border-radius: 50%;
-  box-shadow: 0 0 8px var(--accent-glow);
-}
-
-.header-badge {
-  font-family: var(--mono);
-  font-size: 11px;
-  padding: 2px 8px;
-  border-radius: 4px;
-  background: var(--accent-dim);
-  color: var(--accent);
-}
-
-.header-tagline {
-  font-size: 12px;
-  color: var(--text-3);
-  margin-left: auto;
-}
-
-.mode-toggle {
-  display: flex;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  overflow: hidden;
-}
-
-.mode-btn {
-  padding: 5px 12px;
-  font-size: 12px;
-  font-weight: 500;
-  background: none;
-  border: none;
-  color: var(--text-3);
-  cursor: pointer;
-  transition: all 0.15s;
-}
-
-.mode-btn:first-child { border-right: 1px solid var(--border); }
-.mode-btn:hover { color: var(--text-2); }
-.mode-btn.active { background: var(--accent-dim); color: var(--accent); }
-
-/* ── Main layout ── */
-.workspace {
-  display: grid;
-  grid-template-columns: 1fr 300px;
-  flex: 1;
-  overflow: hidden;
-}
-
-/* ── Left: Editor ── */
-.editor-panel {
-  display: flex;
-  flex-direction: column;
-  border-right: 1px solid var(--border);
-  overflow: hidden;
-}
-
-.panel-head {
-  padding: 10px 16px;
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-shrink: 0;
-  background: var(--surface);
-}
-
-.panel-label {
-  font-size: 11px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--text-3);
-}
-
-.active-hash {
-  font-family: var(--mono);
-  font-size: 11px;
-  color: var(--accent);
-}
-
-/* edit view */
-.edit-view {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  padding: 16px;
-  gap: 10px;
-  overflow: hidden;
-}
-
-textarea {
-  flex: 1;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  color: var(--text);
-  font-family: var(--mono);
-  font-size: 13px;
-  line-height: 1.7;
-  padding: 14px 16px;
-  resize: none;
-  outline: none;
-  transition: border-color 0.15s;
-}
-
-textarea:focus { border-color: rgba(124,106,247,0.4); }
-textarea::placeholder { color: var(--text-3); }
-
-.editor-footer {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.char-info {
-  font-family: var(--mono);
-  font-size: 11px;
-  color: var(--text-3);
-  margin-right: auto;
-}
-
-.commit-input {
-  flex: 1;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  color: var(--text);
-  font-size: 12px;
-  padding: 7px 12px;
-  outline: none;
-  transition: border-color 0.15s;
-  max-width: 260px;
-}
-
-.commit-input:focus { border-color: rgba(124,106,247,0.4); }
-.commit-input::placeholder { color: var(--text-3); }
-
-.btn {
-  padding: 7px 14px;
-  border-radius: 6px;
-  border: 1px solid var(--border);
-  font-size: 12px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.15s;
-  white-space: nowrap;
-}
-
-.btn-primary {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: #fff;
-}
-.btn-primary:hover { opacity: 0.88; }
-
-.btn-ghost {
-  background: none;
-  color: var(--text-3);
-}
-.btn-ghost:hover { color: var(--text-2); border-color: var(--border-hover); }
-
-.btn-danger {
-  background: none;
-  color: var(--red);
-  border-color: transparent;
-}
-.btn-danger:hover { background: var(--red-dim); border-color: var(--red-dim); }
-
-/* compare view */
-.compare-view {
-  display: none;
-  flex: 1;
-  overflow: hidden;
-}
-.compare-view.show {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-}
-
-.compare-side {
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  border-right: 1px solid var(--border);
-}
-.compare-side:last-child { border-right: none; }
-
-.compare-head {
-  padding: 8px 14px;
-  background: var(--surface);
-  border-bottom: 1px solid var(--border);
-  font-family: var(--mono);
-  font-size: 11px;
-  color: var(--text-3);
-  flex-shrink: 0;
-}
-
-.compare-body {
-  flex: 1;
-  padding: 16px;
-  font-family: var(--mono);
-  font-size: 12px;
-  line-height: 1.7;
-  overflow-y: auto;
-  white-space: pre-wrap;
-  word-break: break-word;
-  color: var(--text-2);
-}
-
-/* diff strip */
-.diff-strip {
-  border-top: 1px solid var(--border);
-  background: var(--surface);
-  flex-shrink: 0;
-  display: none;
-}
-.diff-strip.show { display: block; }
-
-.diff-head {
-  padding: 8px 14px;
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.diff-label {
-  font-family: var(--mono);
-  font-size: 11px;
-  color: var(--text-3);
-}
-
-.diff-close {
-  margin-left: auto;
-  background: none;
-  border: none;
-  color: var(--text-3);
-  cursor: pointer;
-  font-size: 16px;
-  line-height: 1;
-  padding: 0 2px;
-}
-.diff-close:hover { color: var(--text-2); }
-
-.diff-body {
-  padding: 12px 16px;
-  font-family: var(--mono);
-  font-size: 12px;
-  line-height: 1.7;
-  max-height: 180px;
-  overflow-y: auto;
-  white-space: pre-wrap;
-  word-break: break-word;
-}
-
-.diff-body::-webkit-scrollbar { width: 4px; }
-.diff-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
-
-.ins { background: var(--green-dim); color: var(--green); border-radius: 2px; padding: 0 2px; }
-.del { background: var(--red-dim); color: var(--red); border-radius: 2px; padding: 0 2px; text-decoration: line-through; }
-
-/* ── Right: History ── */
-.history-panel {
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-.history-list {
-  flex: 1;
-  overflow-y: auto;
-  scrollbar-width: thin;
-  scrollbar-color: var(--border) transparent;
-}
-
-.history-list::-webkit-scrollbar { width: 4px; }
-.history-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
-
-.empty-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  height: 200px;
-  color: var(--text-3);
-  padding: 24px;
-  text-align: center;
-}
-
-.empty-icon {
-  width: 32px; height: 32px;
-  border: 1px dashed var(--border-hover);
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.empty-icon svg { opacity: 0.4; }
-.empty-text { font-size: 12px; line-height: 1.6; }
-
-.version-item {
-  padding: 12px 16px;
-  border-bottom: 1px solid var(--border);
-  cursor: pointer;
-  transition: background 0.1s;
-  position: relative;
-}
-
-.version-item:hover { background: rgba(255,255,255,0.02); }
-
-.version-item.active {
-  background: var(--accent-dim);
-  border-left: 2px solid var(--accent);
-  padding-left: 14px;
-}
-
-.version-item.comparing {
-  background: var(--green-dim);
-  border-left: 2px solid var(--green);
-  padding-left: 14px;
-}
-
-.v-row1 {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-bottom: 3px;
-}
-
-.v-hash {
-  font-family: var(--mono);
-  font-size: 11px;
-  font-weight: 500;
-  color: var(--accent);
-}
-
-.v-tag {
-  font-size: 10px;
-  padding: 1px 6px;
-  border-radius: 3px;
-  font-weight: 500;
-}
-
-.v-tag-current { background: var(--accent-dim); color: var(--accent); }
-.v-tag-a { background: var(--green-dim); color: var(--green); }
-.v-tag-b { background: rgba(251,191,36,0.1); color: #fbbf24; }
-
-.v-msg {
-  font-size: 12px;
-  color: var(--text);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  margin-bottom: 2px;
-}
-
-.v-meta {
-  font-size: 11px;
-  color: var(--text-3);
-  font-family: var(--mono);
-}
-
-.v-actions {
-  position: absolute;
-  right: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  display: none;
-  gap: 4px;
-}
-
-.version-item:hover .v-actions { display: flex; }
-
-.v-btn {
-  font-size: 10px;
-  padding: 3px 8px;
-  border-radius: 4px;
-  border: 1px solid var(--border);
-  background: var(--surface2);
-  color: var(--text-2);
-  cursor: pointer;
-  transition: all 0.15s;
-}
-.v-btn:hover { border-color: var(--border-hover); color: var(--text); }
-.v-btn.danger { color: var(--red); }
-.v-btn.danger:hover { background: var(--red-dim); border-color: var(--red-dim); }
-
-/* ── Toast ── */
-.toast {
-  position: fixed;
-  bottom: 20px;
-  left: 50%;
-  transform: translateX(-50%) translateY(60px);
-  background: var(--surface2);
-  border: 1px solid var(--border-hover);
-  border-radius: 8px;
-  padding: 10px 18px;
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--text-2);
-  z-index: 100;
-  opacity: 0;
-  transition: all 0.25s;
-  white-space: nowrap;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.5);
-}
-
-.toast.show {
-  opacity: 1;
-  transform: translateX(-50%) translateY(0);
-}
-
-.toast.ok { border-color: rgba(74,222,128,0.3); color: var(--green); }
-</style>
-</head>
-<body>
-
-<header>
-  <div class="logo">
-    <span class="logo-dot"></span>
-    PromptGit
-  </div>
-  <span class="header-badge" id="versionBadge">0 versions</span>
-  <div class="mode-toggle">
-    <button class="mode-btn active" onclick="setMode('edit')">Editor</button>
-    <button class="mode-btn" onclick="setMode('compare')">Compare</button>
-  </div>
-  <span class="header-tagline">version control for AI prompts · all local</span>
-</header>
-
-<div class="workspace">
-
-  <!-- Left -->
-  <div class="editor-panel">
-    <div class="panel-head">
-      <span class="panel-label">Prompt Editor</span>
-      <span class="active-hash" id="activeLabel">new</span>
-    </div>
-
-    <!-- Edit mode -->
-    <div class="edit-view" id="editView">
-      <textarea id="promptEditor"
-        placeholder="Write your prompt here…&#10;&#10;Every save creates a new version you can diff, compare, and restore."
-        spellcheck="false"></textarea>
-      <div class="editor-footer">
-        <span class="char-info"><span id="charCount">0</span> chars · <span id="wordCount">0</span> words</span>
-        <button class="btn btn-ghost" onclick="clearEditor()">Clear</button>
-        <input class="commit-input" id="commitMsg" placeholder="Commit message (optional)" />
-        <button class="btn btn-primary" onclick="saveVersion()">Save version</button>
-      </div>
-    </div>
-
-    <!-- Compare mode -->
-    <div class="compare-view" id="compareView">
-      <div class="compare-side">
-        <div class="compare-head" id="compareHeadA">Select version A →</div>
-        <div class="compare-body" id="compareBodyA" style="color:var(--text-3)">No version selected</div>
-      </div>
-      <div class="compare-side">
-        <div class="compare-head" id="compareHeadB">Select version B →</div>
-        <div class="compare-body" id="compareBodyB" style="color:var(--text-3)">No version selected</div>
-      </div>
-    </div>
-
-    <!-- Diff strip -->
-    <div class="diff-strip" id="diffStrip">
-      <div class="diff-head">
-        <span class="diff-label" id="diffLabel">Diff</span>
-        <button class="diff-close" onclick="closeDiff()">×</button>
-      </div>
-      <div class="diff-body" id="diffBody"></div>
-    </div>
-  </div>
-
-  <!-- Right -->
-  <div class="history-panel">
-    <div class="panel-head">
-      <span class="panel-label">History</span>
-      <button class="btn btn-danger" style="font-size:11px;padding:4px 10px" onclick="clearAll()">Clear all</button>
-    </div>
-    <div class="history-list" id="historyList">
-      <div class="empty-state">
-        <div class="empty-icon">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-            <circle cx="12" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><circle cx="18" cy="6" r="3"/>
-            <path d="M18 9v1a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V9"/><line x1="12" y1="12" x2="12" y2="15"/>
-          </svg>
-        </div>
-        <span class="empty-text">No versions yet.<br>Write a prompt and save it.</span>
-      </div>
-    </div>
-  </div>
-
-</div>
-
-<div class="toast" id="toast"></div>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.45.0/min/vs/loader.js"></script>
 
 <script>
-let versions = JSON.parse(localStorage.getItem('promptgit_v2') || '[]');
-let mode = 'edit';
-let activeIdx = null;
-let compareA = null, compareB = null;
-
-// ── Init ──────────────────────────────────────────────────────────────────────
-document.getElementById('promptEditor').addEventListener('input', updateCounts);
-render();
-updateCounts();
-
-// ── Core ──────────────────────────────────────────────────────────────────────
-function saveVersion() {
-  const content = document.getElementById('promptEditor').value.trim();
-  if (!content) { toast('Nothing to save', ''); return; }
-  const msg = document.getElementById('commitMsg').value.trim() || 'Updated prompt';
-  const hash = Math.random().toString(36).substr(2, 7);
-  versions.unshift({ hash, content, message: msg, ts: Date.now() });
-  localStorage.setItem('promptgit_v2', JSON.stringify(versions));
-  document.getElementById('commitMsg').value = '';
-  activeIdx = 0;
-  render();
-  toast('Saved ' + hash, 'ok');
-}
-
-function selectVersion(i) {
-  if (mode === 'compare') {
-    if (compareA === null || (compareA !== null && compareB !== null)) {
-      compareA = i; compareB = null;
-    } else if (compareB === null && i !== compareA) {
-      compareB = i;
-      renderCompare();
+tailwind.config = {
+  theme: {
+    extend: {
+      colors: { bg: '#020205', surface: '#0a0a14', surface2: '#121224', accent: '#8b5cf6', 'accent-dim': 'rgba(139, 92, 246, 0.15)', border: 'rgba(255,255,255,0.08)' },
+      fontFamily: { sans: ['Inter', 'sans-serif'], mono: ['JetBrains Mono', 'monospace'] }
     }
-    render();
-    return;
-  }
-  activeIdx = i;
-  document.getElementById('promptEditor').value = versions[i].content;
-  document.getElementById('activeLabel').textContent = versions[i].hash;
-  updateCounts();
-  render();
-  if (versions[i - 1]) diffBetween(i, i - 1);
-  else if (versions[i + 1]) diffBetween(i + 1, i);
-}
-
-function deleteVersion(i) {
-  versions.splice(i, 1);
-  localStorage.setItem('promptgit_v2', JSON.stringify(versions));
-  if (activeIdx === i) clearEditor();
-  else if (activeIdx > i) activeIdx--;
-  render();
-  toast('Version deleted', '');
-}
-
-function clearAll() {
-  if (!versions.length) return;
-  if (!confirm('Delete all versions? Cannot be undone.')) return;
-  versions = [];
-  localStorage.removeItem('promptgit_v2');
-  clearEditor();
-  render();
-  toast('Cleared', '');
-}
-
-function clearEditor() {
-  document.getElementById('promptEditor').value = '';
-  document.getElementById('activeLabel').textContent = 'new';
-  activeIdx = null;
-  updateCounts();
-  closeDiff();
-  render();
-}
-
-// ── Mode ──────────────────────────────────────────────────────────────────────
-function setMode(m) {
-  mode = m;
-  document.querySelectorAll('.mode-btn').forEach((b, i) =>
-    b.classList.toggle('active', (m === 'edit' && i === 0) || (m === 'compare' && i === 1))
-  );
-  document.getElementById('editView').style.display = m === 'edit' ? 'flex' : 'none';
-  document.getElementById('compareView').classList.toggle('show', m === 'compare');
-  if (m === 'compare') {
-    compareA = null; compareB = null;
-    render();
-    toast('Select 2 versions to compare', '');
   }
 }
+</script>
 
-// ── Diff ──────────────────────────────────────────────────────────────────────
-function diffBetween(newerIdx, olderIdx) {
-  const curr = versions[newerIdx].content;
-  const prev = versions[olderIdx].content;
-  document.getElementById('diffBody').innerHTML = computeDiff(prev, curr);
-  document.getElementById('diffLabel').textContent =
-    `${versions[olderIdx].hash} → ${versions[newerIdx].hash}`;
-  document.getElementById('diffStrip').classList.add('show');
+<style type="text/tailwindcss">
+@layer components {
+  .glass { @apply bg-[#0a0a14]/90 backdrop-blur-xl border border-border; }
+  .btn { @apply px-4 py-2 rounded-lg font-semibold text-[11px] transition-all duration-200 active:scale-95 flex items-center justify-center; }
+  .btn-primary { @apply bg-accent text-white hover:opacity-90 shadow-lg shadow-accent/20; }
+  .btn-ghost { @apply bg-surface2 text-gray-400 border border-border hover:text-white hover:border-white/20; }
+  .tab-btn { @apply px-6 py-2 text-sm font-medium text-gray-500 hover:text-gray-300 transition-all border-b-2 border-transparent; }
+  .tab-btn.active { @apply text-accent border-accent; }
+  .input-field { @apply bg-surface border border-border rounded-lg px-4 py-2 text-sm outline-none focus:border-accent/50 transition-all; }
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-thumb { @apply bg-white/10 rounded-full hover:bg-white/20; }
 }
+#diff-container { height: 100%; width: 100%; }
+.monaco-editor, .monaco-editor-background, .monaco-editor .margin-view-overlays { background-color: #0a0a14 !important; }
+</style>
+</head>
+<body class="bg-bg text-gray-200 h-screen flex flex-col font-sans overflow-hidden">
 
-function closeDiff() {
-  document.getElementById('diffStrip').classList.remove('show');
-}
+<header class="h-16 border-b border-border glass flex items-center px-8 justify-between z-50">
+  <div class="flex items-center gap-12">
+    <div class="flex items-center gap-3">
+      <div class="w-3 h-3 bg-accent rounded-sm rotate-45 shadow-[0_0_15px_rgba(139, 92, 246, 0.5)]"></div>
+      <span class="font-bold tracking-tighter text-lg">PromptGit</span>
+    </div>
+    <nav class="flex gap-2">
+      <button id="tab-files" class="tab-btn active" onclick="switchTab('files')">Skill Diff</button>
+      <button id="tab-text" class="tab-btn" onclick="switchTab('text')">Prompt Diff</button>
+    </nav>
+  </div>
+  
+  <div class="flex items-center gap-3">
+    <button class="btn btn-ghost gap-2 text-accent border-accent/20" onclick="toggleLLMPanel()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M19 17v4"/><path d="M3 5h4"/><path d="M17 19h4"/></svg>
+      Prompt Evolution Insight
+    </button>
+    <button class="btn btn-ghost w-10 px-0" onclick="toggleHistory(true)">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg>
+    </button>
+  </div>
+</header>
 
-function computeDiff(oldText, newText) {
-  const ow = oldText.split(/(\s+)/), nw = newText.split(/(\s+)/);
-  const m = ow.length, n = nw.length;
-  const dp = Array.from({ length: m + 1 }, () => new Array(n + 1).fill(0));
-  for (let i = 1; i <= m; i++)
-    for (let j = 1; j <= n; j++)
-      dp[i][j] = ow[i-1] === nw[j-1] ? dp[i-1][j-1]+1 : Math.max(dp[i-1][j], dp[i][j-1]);
-  const res = [];
-  let i = m, j = n;
-  while (i > 0 || j > 0) {
-    if (i > 0 && j > 0 && ow[i-1] === nw[j-1]) { res.unshift({t:'s',v:ow[i-1]}); i--; j--; }
-    else if (j > 0 && (i === 0 || dp[i][j-1] >= dp[i-1][j])) { res.unshift({t:'a',v:nw[j-1]}); j--; }
-    else { res.unshift({t:'d',v:ow[i-1]}); i--; }
-  }
-  return res.map(r =>
-    r.t === 's' ? esc(r.v) :
-    r.t === 'a' ? `<span class="ins">${esc(r.v)}</span>` :
-    `<span class="del">${esc(r.v)}</span>`
-  ).join('');
-}
+<main class="flex-1 flex overflow-hidden">
+  
+  <!-- Sidebar -->
+  <aside id="sidebar" class="w-80 border-r border-border bg-surface flex flex-col transition-all duration-300 relative">
+    <div class="p-4 border-b border-border flex justify-between items-center bg-surface2/30">
+      <span class="text-[10px] font-bold text-gray-500 uppercase tracking-widest text-balance">Select Comparison Tracks</span>
+      <button class="text-gray-500 hover:text-white" onclick="resetAll()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg></button>
+    </div>
+    
+    <div class="flex-1 flex overflow-hidden">
+      <!-- Track A -->
+      <div class="flex-1 border-r border-border/50 flex flex-col min-w-0">
+        <div class="p-2 text-[9px] font-black text-center text-gray-600 bg-surface uppercase border-b border-border/50 tracking-tighter">Track A (Left)</div>
+        <div id="sidebar-a" class="flex-1 overflow-auto p-2 space-y-0.5"></div>
+      </div>
+      <!-- Track B -->
+      <div class="flex-1 flex flex-col min-w-0">
+        <div class="p-2 text-[9px] font-black text-center text-gray-600 bg-surface uppercase border-b border-border/50 tracking-tighter">Track B (Right)</div>
+        <div id="sidebar-b" class="flex-1 overflow-auto p-2 space-y-0.5"></div>
+      </div>
+    </div>
+  </aside>
 
-// ── Compare ───────────────────────────────────────────────────────────────────
-function renderCompare() {
-  if (compareA === null || compareB === null) return;
-  const vA = versions[compareA], vB = versions[compareB];
-  document.getElementById('compareHeadA').textContent = `${vA.hash} — ${vA.message}`;
-  document.getElementById('compareHeadB').textContent = `${vB.hash} — ${vB.message}`;
-  document.getElementById('compareBodyA').textContent = vA.content;
-  document.getElementById('compareBodyA').style.color = 'var(--text)';
-  document.getElementById('compareBodyB').textContent = vB.content;
-  document.getElementById('compareBodyB').style.color = 'var(--text)';
-}
-
-// ── Render ────────────────────────────────────────────────────────────────────
-function render() {
-  const list = document.getElementById('historyList');
-  document.getElementById('versionBadge').textContent =
-    `${versions.length} version${versions.length !== 1 ? 's' : ''}`;
-
-  if (!versions.length) {
-    list.innerHTML = `
-      <div class="empty-state">
-        <div class="empty-icon">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-            <circle cx="12" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><circle cx="18" cy="6" r="3"/>
-            <path d="M18 9v1a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V9"/><line x1="12" y1="12" x2="12" y2="15"/>
-          </svg>
+  <!-- Content -->
+  <section class="flex-1 flex flex-col relative bg-bg">
+    
+    <!-- File Drop View -->
+    <div id="drop-view" class="absolute inset-0 z-40 bg-bg p-8 flex gap-6">
+      <div class="flex-1 border-2 border-dashed border-border rounded-2xl flex flex-col items-center justify-center gap-6 hover:border-accent/40 bg-surface/50 cursor-pointer group" onclick="document.getElementById('file-a').click()">
+        <input type="file" id="file-a" class="hidden" multiple webkitdirectory onchange="handleFileSelect(event, 'a')">
+        <div class="w-20 h-20 rounded-3xl bg-surface2 flex items-center justify-center shadow-xl border border-white/5 group-hover:scale-110 transition-transform">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="text-gray-400 group-hover:text-accent"><path d="M12 5v14M5 12h14"/></svg>
         </div>
-        <span class="empty-text">No versions yet.<br>Write a prompt and save it.</span>
+        <div class="text-center">
+          <div class="text-sm font-semibold text-gray-300">Original Version (A)</div>
+          <div class="text-xs text-gray-500 mt-2 text-balance px-4">Drop or select folder / files</div>
+        </div>
+        <div id="info-a" class="text-[10px] font-mono text-accent transition-all duration-500"></div>
+      </div>
+
+      <div class="flex-1 border-2 border-dashed border-border rounded-2xl flex flex-col items-center justify-center gap-6 hover:border-accent/40 bg-surface/50 cursor-pointer group" onclick="document.getElementById('file-b').click()">
+        <input type="file" id="file-b" class="hidden" multiple webkitdirectory onchange="handleFileSelect(event, 'b')">
+        <div class="w-20 h-20 rounded-3xl bg-surface2 flex items-center justify-center shadow-xl border border-white/5 group-hover:scale-110 transition-transform">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="text-gray-400 group-hover:text-accent"><path d="M12 5v14M5 12h14"/></svg>
+        </div>
+        <div class="text-center">
+          <div class="text-sm font-semibold text-gray-300">Modified Version (B)</div>
+          <div class="text-xs text-gray-500 mt-2 text-balance px-4">Drop or select folder / files</div>
+        </div>
+        <div id="info-b" class="text-[10px] font-mono text-accent transition-all duration-500"></div>
+      </div>
+    </div>
+
+    <!-- Text View -->
+    <div id="text-view" class="hidden absolute inset-0 z-40 bg-bg p-8 flex flex-col gap-4">
+      <div class="flex-1 flex gap-6">
+        <textarea id="text-a" class="flex-1 input-field font-mono bg-surface/50 focus:bg-surface resize-none py-4" placeholder="Paste original prompt (A)..."></textarea>
+        <textarea id="text-b" class="flex-1 input-field font-mono bg-surface/50 focus:bg-surface resize-none py-4" placeholder="Paste modified prompt (B)..."></textarea>
+      </div>
+      <div class="flex justify-end"><button class="btn btn-primary px-12 py-3" onclick="compareTexts()">Analyze Evolution</button></div>
+    </div>
+
+    <!-- Diff Editor View -->
+    <div id="diff-view" class="flex-1 flex flex-col opacity-0 pointer-events-none transition-all duration-300">
+      <div class="h-10 bg-surface2/30 border-b border-border flex items-center px-4 justify-between">
+        <div class="flex items-center gap-3">
+          <span class="text-[9px] font-black text-gray-500 uppercase tracking-tighter">Comparing</span>
+          <span class="text-[10px] font-mono text-accent bg-accent-dim px-2 py-0.5 rounded border border-accent/20" id="cur-path-a">A: NONE</span>
+          <span class="text-gray-700">➔</span>
+          <span class="text-[10px] font-mono text-green-400 bg-green-500/5 px-2 py-0.5 rounded border border-green-500/20" id="cur-path-b">B: NONE</span>
+        </div>
+        <div class="flex gap-2">
+          <button id="skill-restart-btn" class="btn h-7 px-3 btn-ghost hidden border-accent/20 text-gray-500 hover:text-white" onclick="resetAll()">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="mr-1.5"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg> Start Over
+          </button>
+          <button id="back-to-edit-btn" class="btn h-7 px-3 btn-ghost hidden border-accent/30 text-accent hover:bg-accent/10" onclick="backToEdit()">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" class="mr-1.5"><path d="m15 18-6-6 6-6"/></svg> Back to Edit
+          </button>
+          <button id="toggle-layout-btn" class="btn h-7 px-3 btn-ghost hover:bg-accent hover:text-white" onclick="toggleInline()">Toggle Layout</button>
+        </div>
+      </div>
+      <div id="diff-container" class="flex-1"></div>
+    </div>
+
+    <!-- AI Output -->
+    <div id="ai-output" class="absolute bottom-6 left-6 right-6 glass p-6 rounded-2xl hidden flex flex-col gap-4 shadow-2xl z-50 transition-all duration-300">
+      <div class="flex justify-between items-center">
+        <div class="flex items-center gap-3 text-accent"><div class="animate-pulse"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg></div><span class="text-xs font-bold uppercase tracking-widest">Evolution Insight Report</span></div>
+        <button class="text-gray-500 hover:text-white transition-colors" onclick="closeAIOutput()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+      </div>
+      <div id="ai-content" class="text-sm text-gray-300 leading-relaxed max-h-60 overflow-y-auto pr-2">Processing...</div>
+    </div>
+  </section>
+
+  <!-- LLM Panel -->
+  <aside id="llm-panel" class="w-0 overflow-hidden border-l border-border bg-surface flex flex-col transition-all duration-300">
+    <div class="p-6 space-y-8 min-w-[320px]">
+      <div class="space-y-4">
+        <h3 class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Insight Engine Config</h3>
+        <div class="space-y-4">
+          <div class="space-y-2">
+            <label class="text-[10px] text-gray-500 ml-1">Provider</label>
+            <select id="llm-provider" class="w-full input-field" onchange="saveConfig()">
+              <option value="siliconflow">SiliconFlow</option>
+              <option value="zhipu">Zhipu AI</option>
+              <option value="minimax">MiniMax</option>
+              <option value="openai">OpenAI</option>
+              <option value="claude">Claude</option>
+            </select>
+          </div>
+          <div class="space-y-2">
+            <label class="text-[10px] text-gray-500 ml-1">API Key</label>
+            <input type="password" id="api-key" class="w-full input-field" placeholder="sk-..." onchange="saveConfig()">
+          </div>
+          <div class="space-y-2">
+            <label class="text-[10px] text-gray-500 ml-1">Model ID</label>
+            <input type="text" id="llm-model" list="model-list" class="w-full input-field" placeholder="Target model" onchange="saveConfig()">
+            <datalist id="model-list">
+              <option value="Minimax-M2.5"><option value="deepseek-ai/DeepSeek-V3"><option value="Qwen/Qwen2.5-72B-Instruct"><option value="gpt-4o"><option value="claude-3-5-sonnet-20240620">
+            </datalist>
+          </div>
+        </div>
+      </div>
+      <button id="ai-analyze-btn" class="w-full btn btn-primary py-4 gap-3 text-sm disabled:opacity-50 disabled:cursor-not-allowed" onclick="runAIAnalysis()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg> <span id="ai-btn-text">Run Evolution Analysis</span></button>
+      <div class="bg-accent-dim/10 border border-accent/20 p-4 rounded-xl">
+        <h4 class="text-[10px] font-bold text-accent uppercase mb-2">Evolution Dimensions</h4>
+        <p class="text-[10px] text-gray-500 leading-relaxed">
+          · Core intent extraction<br>
+          · Style drift prediction<br>
+          · Logic rigor & success assessment<br>
+          · Real-world pros & cons
+        </p>
+      </div>
+    </div>
+  </aside>
+</main>
+
+<div id="history-overlay" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[55] opacity-0 pointer-events-none transition-opacity duration-300" onclick="toggleHistory(false)"></div>
+<div id="history-drawer" class="fixed inset-y-0 right-0 w-80 glass z-[60] transform translate-x-full transition-transform duration-300 flex flex-col shadow-2xl">
+  <div class="p-6 border-b border-border flex justify-between items-center bg-surface2/30">
+    <h3 class="font-bold tracking-tight">Evolution History</h3>
+    <button class="text-gray-500 hover:text-white" onclick="toggleHistory(false)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+  </div>
+  <div id="history-list" class="flex-1 overflow-y-auto p-4 space-y-3 bg-bg/50"></div>
+  <div class="p-4 border-t border-border bg-surface"><button class="w-full btn btn-ghost" onclick="clearAllHistory()">Clear Records</button></div>
+</div>
+
+<script>
+let diffEditor = null, currentTab = 'files', filesA = {}, filesB = {};
+let currentPathA = null, currentPathB = null, isAnalyzing = false;
+let history = JSON.parse(localStorage.getItem('promptgit_history') || '[]');
+
+require.config({ paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.45.0/min/vs' }});
+function initMonaco() {
+  require(['vs/editor/editor.main'], function() {
+    monaco.editor.defineTheme('pg-dark', { base: 'vs-dark', inherit: true, rules: [], colors: { 'editor.background': '#0a0a14', 'diffEditor.insertedTextBackground': '#22c55e15', 'diffEditor.removedTextBackground': '#ef444415' }});
+    diffEditor = monaco.editor.createDiffEditor(document.getElementById('diff-container'), { theme: 'pg-dark', automaticLayout: true, readOnly: true, renderSideBySide: true, fontSize: 13, fontFamily: 'JetBrains Mono', minimap: { enabled: false }});
+  });
+}
+
+function saveConfig() {
+  localStorage.setItem('promptgit_provider', document.getElementById('llm-provider').value);
+  localStorage.setItem('promptgit_key', document.getElementById('api-key').value);
+  localStorage.setItem('promptgit_model', document.getElementById('llm-model').value);
+}
+
+function loadConfig() {
+  document.getElementById('llm-provider').value = localStorage.getItem('promptgit_provider') || 'siliconflow';
+  document.getElementById('api-key').value = localStorage.getItem('promptgit_key') || '';
+  document.getElementById('llm-model').value = localStorage.getItem('promptgit_model') || '';
+}
+
+function switchTab(t) {
+  currentTab = t;
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.id === 'tab-' + t));
+  if (t === 'files') {
+    document.getElementById('text-view').style.display = 'none';
+    document.getElementById('back-to-edit-btn').classList.add('hidden');
+    document.getElementById('sidebar').style.width = '20rem';
+    const hasData = Object.keys(filesA).length > 0 || Object.keys(filesB).length > 0;
+    document.getElementById('drop-view').style.display = hasData ? 'none' : 'flex';
+    document.getElementById('diff-view').style.opacity = hasData ? '1' : '0';
+    document.getElementById('diff-view').style.pointerEvents = hasData ? 'auto' : 'none';
+    if(hasData) document.getElementById('skill-restart-btn').classList.remove('hidden');
+  } else {
+    document.getElementById('drop-view').style.display = 'none';
+    document.getElementById('skill-restart-btn').classList.add('hidden');
+    document.getElementById('sidebar').style.width = '0';
+    document.getElementById('text-view').style.display = 'flex';
+    document.getElementById('diff-view').style.opacity = '0';
+  }
+}
+
+async function handleFileSelect(e, side) {
+  const files = e.target.files;
+  const storage = side === 'a' ? filesA : filesB;
+  
+  if (diffEditor && diffEditor.getModel()) {
+    const models = diffEditor.getModel();
+    if (models.original) models.original.dispose();
+    if (models.modified) models.modified.dispose();
+    diffEditor.setModel(null);
+  }
+  
+  for (let file of files) {
+    const fullPath = file.webkitRelativePath || file.name;
+    const parts = fullPath.split('/');
+    const path = parts.length > 1 ? parts.slice(1).join('/') : fullPath;
+    storage[path] = await file.text();
+  }
+  
+  const info = document.getElementById('info-' + side);
+  info.textContent = `${Object.keys(storage).length} FILES LOADED`;
+  info.classList.add('font-bold', 'tracking-widest');
+  info.style.fontSize = '12px';
+  info.style.textShadow = '0 0 15px rgba(139, 92, 246, 1)';
+  
+  renderDualTracks();
+
+  if (Object.keys(filesA).length > 0 && Object.keys(filesB).length > 0) {
+    document.getElementById('drop-view').style.display = 'none';
+    document.getElementById('diff-view').style.opacity = '1';
+    document.getElementById('diff-view').style.pointerEvents = 'auto';
+    document.getElementById('skill-restart-btn').classList.remove('hidden');
+  }
+}
+
+function renderDualTracks() {
+  const containerA = document.getElementById('sidebar-a'), containerB = document.getElementById('sidebar-b');
+  const hasBoth = Object.keys(filesA).length > 0 && Object.keys(filesB).length > 0;
+  
+  let allPaths;
+  if (hasBoth) {
+    const allPathsSet = new Set([...Object.keys(filesA), ...Object.keys(filesB)]);
+    allPaths = Array.from(allPathsSet).sort((a, b) => {
+      const inA_a = a in filesA, inB_a = a in filesB;
+      const inA_b = b in filesA, inB_b = b in filesB;
+      const common_a = inA_a && inB_a, common_b = inA_b && inB_b;
+      if (common_a !== common_b) return common_b ? 1 : -1;
+      if (common_a && common_b) {
+        if (filesA[a] !== filesB[a] && filesA[b] === filesB[b]) return -1;
+        if (filesA[a] === filesB[a] && filesA[b] !== filesB[b]) return 1;
+      }
+      return a.localeCompare(b);
+    });
+  }
+
+  const renderSingleList = (files, side, currentPath) => {
+    return Object.keys(files).sort().map(path => {
+      const active = path === currentPath;
+      return `<div class="group h-[26px] flex items-center gap-2 p-1 px-1.5 rounded cursor-pointer transition-all ${active ? 'bg-accent/20 text-accent border border-accent/30' : 'text-gray-500 hover:bg-white/5 hover:text-gray-300'}" onclick="selectTrack('${side}', '${path}')">
+        <div class="w-1.5 h-1.5 rounded-full shrink-0 bg-gray-600"></div>
+        <div class="text-[10px] font-mono truncate flex-1">${path.split('/').pop()}</div>
       </div>`;
-    return;
+    }).join('');
+  };
+
+  const renderItem = (path, side, currentPath) => {
+    const exists = side === 'a' ? path in filesA : path in filesB;
+    if (!exists) return `<div class="h-[26px] opacity-0 pointer-events-none"></div>`;
+    
+    const active = path === currentPath;
+    const otherSide = side === 'a' ? filesB : filesA;
+    const hasOther = path in otherSide;
+    const status = !hasOther ? 'orphan' : (filesA[path] === filesB[path] ? 'same' : 'diff');
+    const dotColor = {
+      'diff': 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)]',
+      'same': 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]',
+      'orphan': 'bg-gray-600'
+    }[status];
+    
+    return `<div class="group h-[26px] flex items-center gap-2 p-1 px-1.5 rounded cursor-pointer transition-all ${active ? 'bg-accent/20 text-accent border border-accent/30' : 'text-gray-500 hover:bg-white/5 hover:text-gray-300'}" onclick="selectTrack('${side}', '${path}')">
+      <div class="w-1.5 h-1.5 rounded-full shrink-0 ${dotColor}"></div>
+      <div class="text-[10px] font-mono truncate flex-1">${path.split('/').pop()}</div>
+    </div>`;
+  };
+
+  if (!hasBoth) {
+    containerA.innerHTML = renderSingleList(filesA, 'a', currentPathA);
+    containerB.innerHTML = renderSingleList(filesB, 'b', currentPathB);
+  } else {
+    containerA.innerHTML = allPaths.map(p => renderItem(p, 'a', currentPathA)).join('');
+    containerB.innerHTML = allPaths.map(p => renderItem(p, 'b', currentPathB)).join('');
   }
-
-  list.innerHTML = versions.map((v, i) => {
-    const cls = activeIdx === i ? 'active' : (compareA === i || compareB === i ? 'comparing' : '');
-    const tags = [
-      activeIdx === i ? '<span class="v-tag v-tag-current">current</span>' : '',
-      compareA === i ? '<span class="v-tag v-tag-a">A</span>' : '',
-      compareB === i ? '<span class="v-tag v-tag-b">B</span>' : ''
-    ].join('');
-    return `
-      <div class="version-item ${cls}" onclick="selectVersion(${i})">
-        <div class="v-row1">
-          <span class="v-hash">${v.hash}</span>${tags}
-        </div>
-        <div class="v-msg">${esc(v.message)}</div>
-        <div class="v-meta">${relTime(v.ts)} · ${v.content.length} chars</div>
-        <div class="v-actions">
-          <button class="v-btn" onclick="event.stopPropagation();diffWith(${i})">Diff</button>
-          <button class="v-btn danger" onclick="event.stopPropagation();deleteVersion(${i})">Delete</button>
-        </div>
-      </div>`;
-  }).join('');
 }
 
-function diffWith(i) {
-  if (!versions[i + 1]) { toast('No older version to diff against', ''); return; }
-  diffBetween(i, i + 1);
+function selectTrack(side, path) {
+  if (side === 'a') { currentPathA = path; if (!currentPathB && path in filesB) currentPathB = path; }
+  else { currentPathB = path; if (!currentPathA && path in filesA) currentPathA = path; }
+  updateDiffView(); renderDualTracks();
 }
 
-// ── Utils ─────────────────────────────────────────────────────────────────────
-function updateCounts() {
-  const t = document.getElementById('promptEditor').value;
-  document.getElementById('charCount').textContent = t.length;
-  document.getElementById('wordCount').textContent = t.trim() ? t.trim().split(/\s+/).length : 0;
+function updateDiffView() {
+  const contentA = currentPathA ? filesA[currentPathA] : '', contentB = currentPathB ? filesB[currentPathB] : '';
+  document.getElementById('cur-path-a').textContent = `A: ${currentPathA?.split('/').pop() || 'NONE'}`;
+  document.getElementById('cur-path-b').textContent = `B: ${currentPathB?.split('/').pop() || 'NONE'}`;
+  diffEditor.setModel({ original: monaco.editor.createModel(contentA, getLang(currentPathA || '')), modified: monaco.editor.createModel(contentB, getLang(currentPathB || '')) });
 }
 
-function relTime(ts) {
-  const d = (Date.now() - ts) / 1000;
-  if (d < 60) return 'just now';
-  if (d < 3600) return Math.floor(d / 60) + 'm ago';
-  if (d < 86400) return Math.floor(d / 3600) + 'h ago';
-  return new Date(ts).toLocaleDateString();
+function compareTexts() {
+  const a = document.getElementById('text-a').value, b = document.getElementById('text-b').value;
+  if (!a && !b) return;
+  document.getElementById('text-view').style.display = 'none';
+  document.getElementById('back-to-edit-btn').classList.remove('hidden');
+  document.getElementById('diff-view').style.opacity = '1';
+  document.getElementById('diff-view').style.pointerEvents = 'auto';
+  diffEditor.setModel({ original: monaco.editor.createModel(a, 'plaintext'), modified: monaco.editor.createModel(b, 'plaintext') });
 }
 
-function esc(s) {
-  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+function backToEdit() {
+  if (diffEditor && diffEditor.getModel()) {
+    const models = diffEditor.getModel();
+    if (models.original) models.original.dispose();
+    if (models.modified) models.modified.dispose();
+    diffEditor.setModel(null);
+  }
+  document.getElementById('diff-view').style.opacity = '0';
+  document.getElementById('text-view').style.display = 'flex';
+  document.getElementById('back-to-edit-btn').classList.add('hidden');
 }
 
-function toast(msg, type) {
-  const el = document.getElementById('toast');
-  el.textContent = msg;
-  el.className = 'toast' + (type === 'ok' ? ' ok' : '') + ' show';
-  clearTimeout(toast._t);
-  toast._t = setTimeout(() => el.classList.remove('show'), 2500);
+function toggleInline() {
+  const isSide = diffEditor.getOptions().get(monaco.editor.EditorOption.renderSideBySide);
+  diffEditor.updateOptions({ renderSideBySide: !isSide });
+  const btn = document.getElementById('toggle-layout-btn');
+  if (isSide) { btn.classList.add('bg-accent', 'text-white'); btn.textContent = 'Side-by-Side View'; } 
+  else { btn.classList.remove('bg-accent', 'text-white'); btn.textContent = 'Inline View'; }
 }
+
+async function runAIAnalysis() {
+  if (isAnalyzing) return;
+  const provider = document.getElementById('llm-provider').value, key = document.getElementById('api-key').value, model = document.getElementById('llm-model').value;
+  if (!key) return alert('API Key Required');
+  const models = diffEditor.getModel();
+  if (!models) return alert('Select content to analyze');
+  const original = models.original.getValue(), modified = models.modified.getValue();
+  
+  isAnalyzing = true;
+  const btn = document.getElementById('ai-analyze-btn'), btnText = document.getElementById('ai-btn-text');
+  btn.disabled = true;
+  btnText.textContent = 'Analyzing...';
+  
+  showAIOutput();
+  document.getElementById('ai-content').innerHTML = '<div class="flex items-center gap-3"><div class="w-2 h-2 bg-accent rounded-full animate-ping"></div> <span class="text-xs uppercase tracking-widest text-accent">Insight in Progress...</span></div>';
+  
+  const desc = currentTab === 'files' ? (currentPathA || currentPathB || 'Files') : 'Prompt Diff';
+  const prompt = `You are a world-class prompt expert. Analyze the evolution between these two versions:
+1. **Core Intent**: What is the primary goal of this change?
+2. **Impact Assessment**: How does it affect the style, rigor, and task success rate?
+3. **Pros & Cons**: Side-by-side comparison.
+Please answer in Chinese for the final report content.\n\n[ORIGINAL]\n${original.slice(0, 5000)}\n\n[MODIFIED]\n${modified.slice(0, 5000)}`;
+  
+  try {
+    let endpoint = provider === 'siliconflow' ? 'https://api.siliconflow.cn/v1/chat/completions' : (provider === 'zhipu' ? 'https://open.bigmodel.cn/api/paas/v4/chat/completions' : (provider === 'minimax' ? 'https://api.minimax.chat/v1/text/chatcompletion_v2' : (provider === 'claude' ? 'https://api.anthropic.com/v1/messages' : 'https://api.openai.com/v1/chat/completions')));
+    let headers = provider === 'claude' ? { 'x-api-key': key, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' } : { 'Authorization': `Bearer ${key}`, 'Content-Type': 'application/json' };
+    let body = JSON.stringify(provider === 'claude' ? { model, max_tokens: 1500, messages: [{ role: 'user', content: prompt }] } : { model, messages: [{ role: 'user', content: prompt }] });
+    const res = await fetch(endpoint, { method: 'POST', headers, body });
+    const data = await res.json();
+    const resultText = (provider === 'claude' ? data.content[0].text : data.choices[0].message.content).replace(/\*\*(.*?)\*\*/g, '<b class="text-accent">$1</b>').replace(/\n/g, '<br>');
+    
+    document.getElementById('ai-content').innerHTML = resultText;
+    saveToHistory('Evolution Insight', desc, resultText);
+  } catch (err) { 
+    const errorText = 'Analysis Failed: ' + err.message;
+    document.getElementById('ai-content').textContent = errorText;
+  } finally {
+    isAnalyzing = false;
+    btn.disabled = false;
+    btnText.textContent = 'Run Evolution Analysis';
+  }
+}
+
+function saveToHistory(type, desc, result) { 
+  const item = { id: Date.now(), type, desc, result, ts: new Date().toLocaleTimeString() }; 
+  history.unshift(item); 
+  localStorage.setItem('promptgit_history', JSON.stringify(history)); 
+  renderHistory(); 
+}
+
+function renderHistory() { 
+  document.getElementById('history-list').innerHTML = history.map(item => `
+    <div class="p-4 bg-surface border border-border rounded-2xl mb-2 cursor-pointer hover:border-accent/40 transition-all" onclick="viewHistoryItem(${item.id})">
+      <div class="flex items-center gap-2 mb-1">
+        <span class="text-[9px] text-accent font-black uppercase bg-accent-dim/10 px-2 py-0.5 rounded">${item.type}</span>
+        <span class="text-[9px] text-gray-600 font-mono ml-auto">${item.ts}</span>
+      </div>
+      <div class="text-[11px] text-gray-400 font-medium truncate">${item.desc}</div>
+    </div>`).join(''); 
+}
+
+function viewHistoryItem(id) {
+  const item = history.find(h => h.id === id);
+  if (item && item.result) {
+    showAIOutput();
+    document.getElementById('ai-content').innerHTML = item.result;
+    toggleHistory(false);
+  }
+}
+
+function getLang(path) { if(!path) return 'plaintext'; const ext = path.split('.').pop(); return { json: 'json', md: 'markdown', py: 'python', js: 'javascript' }[ext] || 'plaintext'; }
+function toggleLLMPanel() { const p = document.getElementById('llm-panel'); p.style.width = p.style.width === '320px' ? '0' : '320px'; }
+function toggleHistory(s) { document.getElementById('history-drawer').classList.toggle('translate-x-full', !s); document.getElementById('history-overlay').classList.toggle('opacity-100', s); document.getElementById('history-overlay').classList.toggle('pointer-events-none', !s); renderHistory(); }
+function showAIOutput() { const el = document.getElementById('ai-output'); el.classList.remove('hidden'); setTimeout(() => el.style.opacity = '1', 50); }
+function closeAIOutput() {
+  if (isAnalyzing) {
+    showToast('Analysis continues in background. Check History later.');
+  }
+  document.getElementById('ai-output').classList.add('hidden');
+}
+
+function showToast(msg) {
+  const toast = document.createElement('div');
+  toast.className = 'fixed bottom-8 left-1/2 -translate-x-1/2 glass px-6 py-3 rounded-xl text-xs font-bold text-accent shadow-2xl z-[100] animate-bounce';
+  toast.style.border = '1px solid rgba(139, 92, 246, 0.3)';
+  toast.textContent = msg;
+  document.body.appendChild(toast);
+  setTimeout(() => toast.remove(), 3000);
+}
+function resetAll() { location.reload(); }
+function clearAllHistory() { localStorage.removeItem('promptgit_history'); location.reload(); }
+window.onload = () => { initMonaco(); loadConfig(); };
 </script>
 </body>
 </html>
