@@ -1,81 +1,33 @@
-# PromptGit
+# PromptGit — AI Prompt Evolution & Insight 🧬
 
-> Version control for AI prompts. Stop guessing which edit made things better.
+**PromptGit** is a professional-grade, browser-based diff tool designed specifically for AI prompt engineering and skill development. It combines classic code diffing with LLM-powered semantic analysis to help developers witness and understand the evolution of their AI instructions.
 
-**[Try it live →](https://zenithclaw.github.io/promptgit/)**
+![PromptGit Preview](https://github.com/zenithClaw/promptgit/raw/main/preview.png)
 
----
+## 🚀 Key Features
 
-## The Problem
+- **Dual-Track File Tree**: Compare two different versions of skill folders with aligned, side-by-side file trees.
+- **Smart Status Indicators**: 🔴 Red (Changed), 🟢 Green (Identical), and ⚪ Gray (Added/New) dots with premium glow effects.
+- **AI Evolution Insight**: Built-in integration with SiliconFlow, Claude, GPT, and MiniMax to analyze intent, style drift, and pros/cons.
+- **Monaco Diff Engine**: High-fidelity diffing experience powered by the same engine as VS Code.
+- **Zero Backend**: 100% client-side. Your code and API keys never leave your browser.
+- **Persistent History**: Automatically caches your API configurations and analysis reports for instant recall.
 
-You've been tweaking the same prompt for an hour.
+## 🛠️ How to Use
 
-You change one word — the output shifts. You change it back — you've already lost the previous version. You have no idea which version was actually the best. You're flying blind.
+1. **Skill Diff**: Drag and drop two local folders into the "Track A" and "Track B" drop zones.
+2. **Prompt Diff**: Paste snippets directly into the text areas for a quick comparison.
+3. **Run Insight**: Configure your LLM API key and click "Run Evolution Analysis" to let AI explain the changes.
 
-There's git for code. Why not for prompts?
+## 🌍 Public Preview
 
----
+Experience the extreme speed of PromptGit here:
+**[https://zenithclaw.github.io/promptgit/](https://zenithclaw.github.io/promptgit/)**
 
-## What It Does
+## 🛡️ Privacy
 
-### 📝 Version History (like git log)
-Every time you save, PromptGit creates a version with:
-- A short hash identifier (e.g. `a3f9bc2`)
-- Your commit message (optional but useful)
-- Timestamp and character count
-
-You can click any version to restore it instantly.
-
-### 🔍 Word-Level Diff
-Click any version to see **exactly what changed** — not just line-by-line, but word-by-word:
-- 🟢 Green = words added in the newer version
-- 🔴 Red (strikethrough) = words removed
-
-This is especially useful for prompt engineering where a single word change ("concise" vs "brief", "list" vs "enumerate") can dramatically affect AI output quality.
-
-### ↔️ Side-by-Side Compare
-Switch to Compare mode, select two versions, and read them side by side. Useful when you want to understand the structural difference between a simple prompt and a heavily engineered one.
-
-### 🔒 100% Local, No Accounts
-All data stays in your browser's localStorage. Nothing is sent to any server. No signup. No tracking. Works offline.
+All file processing and diffing happen locally in your browser. API calls for "Evolution Insight" are sent directly to the providers (SiliconFlow, OpenAI, etc.). No data is stored on any server.
 
 ---
 
-## Who It's For
-
-- **Prompt engineers** iterating on system prompts
-- **Developers** building AI features and tuning model behavior
-- **Anyone** who's spent too long trying to remember which version of a prompt worked best
-
----
-
-## Roadmap
-
-- [ ] **AI Output Compare** — run two versions through the API, compare outputs side by side (the real killer feature)
-- [ ] Export/import version history as JSON
-- [ ] Keyboard shortcuts (Cmd+S to save, etc.)
-- [ ] Tag versions as "best" / "baseline"
-- [ ] Share a snapshot via URL
-
----
-
-## Stack
-
-- Pure HTML + CSS + JS (zero dependencies, no build step)
-- localStorage for persistence
-- LCS algorithm for word-level diff
-
----
-
-## Running Locally
-
-Just open `index.html` in a browser. That's it.
-
-```bash
-git clone https://github.com/zenithClaw/promptgit
-open promptgit/index.html
-```
-
----
-
-Built by [@WowTse66900](https://x.com/WowTse66900) · [Live Demo](https://zenithclaw.github.io/promptgit/)
+Built for AI Creators by **zenithClaw**.
